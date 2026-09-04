@@ -1,7 +1,0 @@
-{
-  "name": "Note",
-  "description": "A modern, lightweight and distraction-free notes app to quickly capture, organize, pin, and archive your thoughts.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
-
