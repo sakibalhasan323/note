@@ -12,14 +12,21 @@ import {
 } from 'firebase/auth';
 import { FirebaseConfig } from '../types';
 
-export const DEFAULT_FIREBASE_CONFIG: FirebaseConfig = {
-  apiKey: "AIzaSyBw1vhpCHelRkv8BMnCcemQ-50xZyMCdc0",
-  authDomain: "note-site-je.firebaseapp.com",
-  projectId: "note-site-je",
-  storageBucket: "note-site-je.firebasestorage.app",
-  messagingSenderId: "1011717430011",
-  appId: "1:1011717430011:web:ec41c01ffc09014d422e5e"
-};
+// Build the Firebase web configuration from build-time environment variables
+// (VITE_FIREBASE_*) so end users can point the app at their own Firebase
+// project without an admin panel. Falls back to the bundled default project.
+function configFromEnv(): FirebaseConfig {
+  return {
+    apiKey: (import.meta.env.VITE_FIREBASE_API_KEY as string) || 'AIzaSyBw1vhpCHelRkv8BMnCcemQ-50xZyMCdc0',
+    authDomain: (import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string) || 'note-site-je.firebaseapp.com',
+    projectId: (import.meta.env.VITE_FIREBASE_PROJECT_ID as string) || 'note-site-je',
+    storageBucket: (import.meta.env.VITE_FIREBASE_STORAGE_BUCKET as string) || 'note-site-je.firebasestorage.app',
+    messagingSenderId: (import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID as string) || '1011717430011',
+    appId: (import.meta.env.VITE_FIREBASE_APP_ID as string) || '1:1011717430011:web:ec41c01ffc09014d422e5e',
+  };
+}
+
+export const DEFAULT_FIREBASE_CONFIG: FirebaseConfig = configFromEnv();
 
 let app: FirebaseApp | null = null;
 let db: Firestore | null = null;

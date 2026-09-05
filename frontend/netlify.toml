@@ -1,8 +1,8 @@
-# Netlify config for the Qnote FRONTEND (static SPA).
-# Backend API is deployed separately (see api/). Set VITE_API_URL at build time
-# to point to your backend, e.g. VITE_API_URL=https://your-api.onrender.com
+# Netlify config for the Note FRONTEND (static SPA).
+# Backend API is optional - the app runs fully with Firebase + localStorage.
 [build]
-  command = "vite build"
+  base = "frontend"
+  command = "npm run build"
   publish = "dist"
 
 # SPA routing: send non-file requests to index.html

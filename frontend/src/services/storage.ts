@@ -113,6 +113,11 @@ class StorageService {
     return all.filter((note) => note.user_id === userId);
   }
 
+  public removeNotesForUser(userId: string): void {
+    const all = this.getRawNotes();
+    this.setRawNotes(all.filter((note) => note.user_id !== userId));
+  }
+
   public saveNote(note: Note): void {
     const all = this.getRawNotes();
     const index = all.findIndex((n) => n.id === note.id);

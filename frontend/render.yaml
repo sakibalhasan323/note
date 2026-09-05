@@ -1,0 +1,32 @@
+# Note FRONTEND - deploy as a static site on Render
+# Render (web) will serve dist/ directly; SPA routes fall back to index.html
+# via the dist/index.html entry.
+services:
+  - type: web
+    name: note-frontend
+    runtime: static
+    plan: free
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: ""
+        sync: false
+      - key: VITE_FIREBASE_API_KEY
+        value: ""
+        sync: false
+      - key: VITE_FIREBASE_AUTH_DOMAIN
+        value: ""
+        sync: false
+      - key: VITE_FIREBASE_PROJECT_ID
+        value: ""
+        sync: false
+      - key: VITE_FIREBASE_STORAGE_BUCKET
+        value: ""
+        sync: false
+      - key: VITE_FIREBASE_MESSAGING_SENDER_ID
+        value: ""
+        sync: false
+      - key: VITE_FIREBASE_APP_ID
+        value: ""
+        sync: false

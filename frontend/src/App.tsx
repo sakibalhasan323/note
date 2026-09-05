@@ -12,7 +12,6 @@ import { AuthModal } from './components/AuthModal';
 import { SettingsModal } from './components/SettingsModal';
 import { EmptyState } from './components/EmptyState';
 import { PrivateNoteUnlockPrompt } from './components/PrivateNoteUnlockPrompt';
-import { AdminPage } from './components/AdminPage';
 import { Note } from './types';
 import { Trash2, Plus, Pin, StickyNote, Lock, Unlock, Search, X } from 'lucide-react';
 
@@ -238,7 +237,7 @@ const MainDashboard: React.FC = () => {
                     <div className="min-w-0 flex-1">
                       <QuickNoteCreator makePrivate />
                     </div>
-                    <button type="button" onClick={() => setIsAddExistingOpen(!isAddExistingOpen)} className="hidden md:inline-flex mt-0.5 shrink-0 items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-3 text-xs font-semibold text-amber-700 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300 dark:hover:bg-amber-950/50">
+                    <button type="button" onClick={() => setIsAddExistingOpen(!isAddExistingOpen)} className="hidden md:inline-flex mt-0.5 shrink-0 items-center gap-1.5 rounded-xl bg-amber-600 px-3.5 py-3 text-xs font-semibold text-white shadow-xs hover:bg-amber-700 active:bg-amber-800 transition-colors">
                       <Plus className="h-3.5 w-3.5" />
                       <span>Add existing note</span>
                     </button>
@@ -421,10 +420,6 @@ const MainDashboard: React.FC = () => {
 };
 
 export default function App() {
-  if (window.location.pathname === '/admin') {
-    return <AdminPage />;
-  }
-
   return (
     <WebsiteProvider>
       <AuthProvider>

@@ -13,8 +13,8 @@ export default defineConfig(() => {
         registerType: 'autoUpdate',
         includeAssets: ['pwa-192.png', 'pwa-512.png', 'assets/favicon.png'],
         manifest: {
-          name: 'Qnote',
-          short_name: 'Qnote',
+          name: 'Note',
+          short_name: 'Note',
           description: 'Secure notes with private sections and cloud sync.',
           theme_color: '#c15f3c',
           background_color: '#0f172a',

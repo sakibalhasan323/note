@@ -74,7 +74,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSettings, viewMode, onView
               </div>
             )}
             <span className="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100">
-              {settings.website_name || 'Qnote'}
+              {settings.website_name || 'Note'}
             </span>
           </div>
         </div>

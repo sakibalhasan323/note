@@ -1,8 +1,9 @@
-# Qnote BACKEND - one-click deploy to Render
-# README: https://render.com/docs/yaml-spec
+# Note - OPTIONAL backend (advanced branding/settings serving)
+# For most users the backend is not required - the static frontend works fully
+# on its own with Firebase + localStorage.
 services:
   - type: web
-    name: qnote-api
+    name: note-api
     runtime: node
     plan: free
     buildCommand: npm install && npm run build
@@ -10,28 +11,4 @@ services:
     envVars:
       - key: CORS_ORIGINS
         value: "*"
-        sync: false
-      - key: ADMIN_USERNAME
-        value: admin@notes.local
-        sync: false
-      - key: ADMIN_PASSWORD
-        value: admin123
-        sync: false
-      - key: FIREBASE_API_KEY
-        value: AIzaSyBw1vhpCHelRkv8BMnCcemQ-50xZyMCdc0
-        sync: false
-      - key: FIREBASE_AUTH_DOMAIN
-        value: note-site-je.firebaseapp.com
-        sync: false
-      - key: FIREBASE_PROJECT_ID
-        value: note-site-je
-        sync: false
-      - key: FIREBASE_STORAGE_BUCKET
-        value: note-site-je.firebasestorage.app
-        sync: false
-      - key: FIREBASE_MESSAGING_SENDER_ID
-        value: "1011717430011"
-        sync: false
-      - key: FIREBASE_APP_ID
-        value: 1:1011717430011:web:ec41c01ffc09014d422e5e
         sync: false

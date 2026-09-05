@@ -245,6 +245,26 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     if (!currentUser) return;
 
+    // Migrate guest-local notes (including their private-note password hashes)
+    // into this Google account. Until sign-in, guest notes live only in
+    // localStorage - this is why "the password doesn't appear in Firebase".
+    // Re-home them now so the hashes upload with the notes below.
+    const guestNotes = storage.getNotes(DEFAULT_USER.id);
+    if (guestNotes.length > 0) {
+      const existingIds = new Set(storage.getNotes(currentUser.id).map((n) => n.id));
+      const migrated: Note[] = [];
+      for (const guestNote of guestNotes) {
+        if (existingIds.has(guestNote.id)) continue;
+        const rehomed: Note = { ...guestNote, user_id: currentUser.id, updated_at: Date.now() };
+        storage.saveNote(rehomed);
+        migrated.push(rehomed);
+      }
+      if (migrated.length > 0) {
+        syncAllNotesToFirebase(currentUser.id, migrated).catch(() => {});
+      }
+      storage.removeNotesForUser(DEFAULT_USER.id);
+    }
+
     setCloudStatus((prev) => ({
       ...prev,
       status: 'syncing',
@@ -756,6 +776,9 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const uid = editingNote.user_id || currentUser?.id || ownerId;
       if (uid) {
         storage.deletePermanently(editingNote.id, uid);
+        if (currentUser) {
+          deleteNoteFromFirebase(editingNote.id, currentUser.id).catch(() => {});
+        }
         reloadNotes();
       }
     }

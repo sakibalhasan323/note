@@ -1,20 +1,23 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { WebsiteSettings, FirebaseConfig } from '../types';
-import { DEFAULT_FIREBASE_CONFIG, initFirebase } from '../lib/firebase';
+import { WebsiteSettings } from '../types';
+import { DEFAULT_FIREBASE_CONFIG } from '../lib/firebase';
 import { apiUrl } from '../lib/config';
 
 interface WebsiteContextType {
   settings: WebsiteSettings;
   isLoading: boolean;
-  updateSettings: (newSettings: Partial<WebsiteSettings>, adminToken: string) => Promise<boolean>;
   reloadSettings: () => Promise<void>;
 }
 
+// Branding and Firebase config are configured with build-time environment
+// variables (VITE_WEBSITE_NAME, VITE_LOGO, ..., VITE_FIREBASE_*) so no admin
+// panel is needed. A serving backend's public /api/settings is used only as a
+// fallback when no VITE_* override is provided.
 const DEFAULT_SETTINGS: WebsiteSettings = {
-  website_name: 'Qnote',
-  logo: '/assets/logo.png',
-  favicon: '/assets/favicon.png',
-  primary_color: '#c15f3c',
+  website_name: (import.meta.env.VITE_WEBSITE_NAME as string) || 'Note',
+  logo: (import.meta.env.VITE_LOGO as string) || '/assets/logo.png',
+  favicon: (import.meta.env.VITE_FAVICON as string) || '/assets/favicon.png',
+  primary_color: (import.meta.env.VITE_PRIMARY_COLOR as string) || '#c15f3c',
   firebase_config: DEFAULT_FIREBASE_CONFIG,
 };
 
@@ -28,7 +31,7 @@ export const WebsiteProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // Apply website title
     if (typeof document !== 'undefined') {
       document.title = `${currentSettings.website_name} - Clean & Simple Notes`;
-      
+
       // Update og:title
       const ogTitle = document.querySelector('meta[property="og:title"]');
       if (ogTitle) ogTitle.setAttribute('content', `${currentSettings.website_name} - Clean & Simple Notes`);
@@ -51,62 +54,52 @@ export const WebsiteProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, []);
 
+  const hasEnvBranding =
+    !!import.meta.env.VITE_WEBSITE_NAME ||
+    !!import.meta.env.VITE_LOGO ||
+    !!import.meta.env.VITE_FAVICON ||
+    !!import.meta.env.VITE_PRIMARY_COLOR;
+
   const reloadSettings = useCallback(async () => {
+    // Env configuration always wins; the backend is optional.
+    if (hasEnvBranding) {
+      setSettings(DEFAULT_SETTINGS);
+      applyBranding(DEFAULT_SETTINGS);
+      setIsLoading(false);
+      return;
+    }
     try {
       const res = await fetch(apiUrl('/settings'));
       if (res.ok) {
         const data = await res.json();
-        setSettings(data);
-        applyBranding(data);
-        if (data.firebase_config) {
-          initFirebase(data.firebase_config);
-        }
+        const merged: WebsiteSettings = {
+          ...DEFAULT_SETTINGS,
+          ...data,
+          website_name: data.website_name || DEFAULT_SETTINGS.website_name,
+          logo: data.logo ?? null,
+          favicon: data.favicon ?? null,
+          primary_color: data.primary_color || DEFAULT_SETTINGS.primary_color,
+          firebase_config: DEFAULT_FIREBASE_CONFIG,
+        };
+        setSettings(merged);
+        applyBranding(merged);
+      } else {
+        applyBranding(DEFAULT_SETTINGS);
       }
     } catch (err) {
-      console.warn('Could not fetch server settings, using defaults', err);
+      console.warn('Could not fetch server settings, using env defaults', err);
       applyBranding(DEFAULT_SETTINGS);
     } finally {
       setIsLoading(false);
     }
-  }, [applyBranding]);
+  }, [applyBranding, hasEnvBranding]);
 
   useEffect(() => {
     reloadSettings();
   }, [reloadSettings]);
 
-  const updateSettings = async (newSettings: Partial<WebsiteSettings>, adminToken: string): Promise<boolean> => {
-    try {
-      const res = await fetch(apiUrl('/admin/settings'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminToken}`,
-        },
-        body: JSON.stringify(newSettings),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ error: 'Update failed' }));
-        throw new Error(errorData.error || 'Failed to update settings');
-      }
-
-      const data = await res.json();
-      if (data.settings) {
-        setSettings(data.settings);
-        applyBranding(data.settings);
-        if (data.settings.firebase_config) {
-          initFirebase(data.settings.firebase_config);
-        }
-      }
-      return true;
-    } catch (err: any) {
-      console.error('Failed to update website settings', err);
-      throw err;
-    }
-  };
-
   return (
-    <WebsiteContext.Provider value={{ settings, isLoading, updateSettings, reloadSettings }}>
+    <WebsiteContext.Provider value={{ settings, isLoading, reloadSettings }}>
       {children}
     </WebsiteContext.Provider>
   );
