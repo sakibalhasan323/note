@@ -42,7 +42,7 @@ export const PrivateNoteUnlockPrompt: React.FC<PrivateNoteUnlockPromptProps> = (
       setIsSubmitting(true);
       setError(null);
       try {
-        await resetPrivatePassword(password);
+        await resetPrivatePassword(password.trim());
         setPassword('');
         setConfirmPassword('');
         if (onSuccess) onSuccess();
@@ -147,9 +147,9 @@ export const PrivateNoteUnlockPrompt: React.FC<PrivateNoteUnlockPromptProps> = (
     try {
       let ok = false;
       if (targetNoteId) {
-        ok = await unlockSinglePrivateNote(targetNoteId, password);
+        ok = await unlockSinglePrivateNote(targetNoteId, password.trim());
       } else {
-        ok = await unlockPrivateSection(password);
+        ok = await unlockPrivateSection(password.trim());
       }
       if (ok) {
         setPassword('');
@@ -179,7 +179,7 @@ export const PrivateNoteUnlockPrompt: React.FC<PrivateNoteUnlockPromptProps> = (
           return;
         }
       }
-      const res = await resetPrivatePassword(password);
+      const res = await resetPrivatePassword(password.trim());
       if (res.success) {
         setSuccessMsg(isGuest ? 'Password updated and notes unlocked!' : 'Password updated and notes unlocked!');
         setPassword('');

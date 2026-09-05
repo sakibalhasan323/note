@@ -377,20 +377,32 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     if (!currentUser) {
-      // Guest: verify against the locally stored password hash
-      const storedHash = storage.getGuestPrivatePasswordHash();
-      if (storedHash) {
-        const isMatch = await verifyPassword(password, storedHash);
-        if (isMatch) {
+      // Guest: verify against the local guest hash AND any per-note hashes so
+      // whichever flow created the private note works consistently. Password is
+      // trimmed the same way it was hashed during setup/reset.
+      const pw = password.trim();
+      const guestHash = storage.getGuestPrivatePasswordHash();
+      const candidateHashes = [
+        guestHash,
+        ...userPrivateNotes.map((n) => n.private_password_hash),
+      ].filter((h): h is string => !!h);
+
+      for (const hash of candidateHashes) {
+        if (await verifyPassword(pw, hash)) {
+          storage.setGuestPrivatePasswordHash(hash);
           setIsPrivateUnlocked(true);
           const allPrivateIds = new Set(userPrivateNotes.map((n) => n.id));
           setUnlockedNoteIds(allPrivateIds);
           return true;
         }
+      }
+
+      // If a password already protects this section/notes, reject mismatch.
+      if (candidateHashes.length > 0) {
         return false;
       }
       // No password set yet -> allow setting one on first use
-      const newHash = await hashPassword(password);
+      const newHash = await hashPassword(pw);
       storage.setGuestPrivatePasswordHash(newHash);
       setIsPrivateUnlocked(true);
       const allPrivateIds = new Set(userPrivateNotes.map((n) => n.id));
@@ -417,22 +429,21 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const target = notes.find((n) => n.id === noteId);
     if (!target || !target.is_private) return false;
 
-    if (!currentUser) {
-      const storedHash = storage.getGuestPrivatePasswordHash();
-      if (!storedHash) return false;
-      const isMatch = await verifyPassword(password, storedHash);
-      if (isMatch) {
+    const pw = password.trim();
+    const guestHash = storage.getGuestPrivatePasswordHash();
+    const candidateHashes = [guestHash, target.private_password_hash].filter((h): h is string => !!h);
+
+    // No password protects this note or the section -> open it freely.
+    if (candidateHashes.length === 0) {
+      setUnlockedNoteIds((prev) => new Set([...prev, noteId]));
+      return true;
+    }
+
+    for (const hash of candidateHashes) {
+      if (await verifyPassword(pw, hash)) {
         setUnlockedNoteIds((prev) => new Set([...prev, noteId]));
         return true;
       }
-      return false;
-    }
-
-    if (!target.private_password_hash) return false;
-    const isMatch = await verifyPassword(password, target.private_password_hash);
-    if (isMatch) {
-      setUnlockedNoteIds((prev) => new Set([...prev, noteId]));
-      return true;
     }
     return false;
   }, [currentUser, notes]);
@@ -453,12 +464,19 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const newHash = newPassword && newPassword.trim() ? await hashPassword(newPassword.trim()) : undefined;
 
       if (!currentUser) {
-        // Guest: store the password hash locally
+        // Guest: store the password hash locally and align every private note
+        // so the old hash can never cause an "incorrect password" again.
         if (newHash) {
           storage.setGuestPrivatePasswordHash(newHash);
+          const allGuestNotes = storage.getNotes(ownerId);
+          for (const note of allGuestNotes) {
+            if (note.is_private && !note.is_deleted) {
+              storage.saveNote({ ...note, private_password_hash: newHash, updated_at: Date.now() });
+            }
+          }
         }
-        setIsPrivateUnlocked(true);
         const allPrivateNotes = storage.getNotes(ownerId).filter((n) => n.is_private && !n.is_deleted);
+        setIsPrivateUnlocked(true);
         setUnlockedNoteIds(new Set(allPrivateNotes.map((n) => n.id)));
         return { success: true };
       }
@@ -510,8 +528,8 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setIsSaving(true);
 
       let passwordHash: string | undefined = undefined;
-      if (data.is_private && data.password) {
-        passwordHash = await hashPassword(data.password);
+      if (data.is_private && data.password && data.password.trim()) {
+        passwordHash = await hashPassword(data.password.trim());
         // For guests, keep the hash in localStorage so the private section can
         // be unlocked. It migrates to Firebase on sign-in.
         if (!currentUser) {
