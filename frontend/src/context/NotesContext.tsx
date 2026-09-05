@@ -413,7 +413,7 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Authenticated: verify against at least one private note's stored hash
     for (const note of userPrivateNotes) {
       if (note.private_password_hash) {
-        const isMatch = await verifyPassword(password, note.private_password_hash);
+        const isMatch = await verifyPassword(password.trim(), note.private_password_hash);
         if (isMatch) {
           setIsPrivateUnlocked(true);
           const allPrivateIds = new Set(userPrivateNotes.map((n) => n.id));
@@ -475,6 +475,8 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             }
           }
         }
+        // Refresh notes state so per-note hashes are up-to-date
+        setNotes(storage.getNotes(ownerId));
         const allPrivateNotes = storage.getNotes(ownerId).filter((n) => n.is_private && !n.is_deleted);
         setIsPrivateUnlocked(true);
         setUnlockedNoteIds(new Set(allPrivateNotes.map((n) => n.id)));
@@ -751,14 +753,15 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const closeEditor = useCallback(() => {
     setIsEditorOpen(false);
     if (editingNote && !editingNote.title.trim() && !editingNote.content.trim()) {
-      if (currentUser) {
-        storage.deletePermanently(editingNote.id, currentUser.id);
+      const uid = editingNote.user_id || currentUser?.id || ownerId;
+      if (uid) {
+        storage.deletePermanently(editingNote.id, uid);
         reloadNotes();
       }
     }
     setEditingNote(null);
     setIsEditorExpanded(false);
-  }, [editingNote, currentUser, reloadNotes]);
+  }, [editingNote, currentUser, ownerId, reloadNotes]);
 
   const openNoteEditor = useCallback((note: Note, expanded = false) => {
     setEditingNote(note);

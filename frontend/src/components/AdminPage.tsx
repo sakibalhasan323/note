@@ -20,7 +20,7 @@ const emptySettings: WebsiteSettings = {
 
 export const AdminPage: React.FC = () => {
   const [token, setToken] = useState(() => sessionStorage.getItem('note_admin_token') || '');
-  const [username, setUsername] = useState('admin@notes.local');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [settings, setSettings] = useState<WebsiteSettings>(emptySettings);
   const [error, setError] = useState('');

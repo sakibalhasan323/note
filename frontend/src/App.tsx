@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { WebsiteProvider } from './context/WebsiteContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotesProvider, useNotes } from './context/NotesContext';
@@ -34,6 +34,8 @@ const MainDashboard: React.FC = () => {
     deletePermanently,
     emptyTrash,
     openNewNoteModal,
+    isEditorOpen,
+    closeEditor,
     userSettings,
     updateUserSettings,
   } = useNotes();
@@ -45,6 +47,42 @@ const MainDashboard: React.FC = () => {
   const [noteToDeletePermanently, setNoteToDeletePermanently] = useState<Note | null>(null);
   const [isEmptyTrashConfirmOpen, setIsEmptyTrashConfirmOpen] = useState(false);
   const [isAddExistingOpen, setIsAddExistingOpen] = useState(false);
+
+  const { isAuthOpen, closeAuth } = useAuth();
+
+  // Mobile/Android back-button handling: keep a history entry whenever a
+  // modal opens, and pop that entry (instead of leaving the page) when the
+  // user presses back while a modal is on top. The topmost open modal wins.
+  const closeTopmostModal = useCallback(() => {
+    if (noteToDeletePermanently) return setNoteToDeletePermanently(null);
+    if (isEmptyTrashConfirmOpen) return setIsEmptyTrashConfirmOpen(false);
+    if (isSettingsOpen) return setIsSettingsOpen(false);
+    if (isEditorOpen) return closeEditor();
+    if (isAuthOpen) return closeAuth();
+  }, [noteToDeletePermanently, isEmptyTrashConfirmOpen, isSettingsOpen, isEditorOpen, isAuthOpen, closeEditor, closeAuth]);
+
+  useEffect(() => {
+    const onPopState = () => {
+      closeTopmostModal();
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [closeTopmostModal]);
+
+  const anyModalOpen =
+    isSettingsOpen || isEditorOpen || isAuthOpen || !!noteToDeletePermanently || isEmptyTrashConfirmOpen;
+
+  // Push exactly one history entry when going from "nothing open" to "a modal
+  // open" so the Android back button closes the modal instead of leaving the
+  // site. Only one entry is kept at a time; closing the topmost modal consumes
+  // it so the next back press leaves normally.
+  const wasModalOpen = useRef(false);
+  useEffect(() => {
+    if (anyModalOpen && !wasModalOpen.current) {
+      window.history.pushState({ qnoteModal: true }, '');
+    }
+    wasModalOpen.current = anyModalOpen;
+  }, [anyModalOpen]);
 
   const isSearching = searchQuery.trim().length > 0 || colorFilter !== 'all';
   const privatePinnedNotes = useMemo(() => privateNotes.filter((note) => note.is_pinned), [privateNotes]);
