@@ -147,6 +147,7 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       theme: 'system',
       floating_add_button_enabled: true,
       view_mode: 'grid',
+      expand_notes_by_default: false,
     };
   });
 
@@ -724,8 +725,9 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       reloadNotes();
       setEditingNote(newNote);
       setIsEditorOpen(true);
+      setIsEditorExpanded(userSettings.expand_notes_by_default);
     },
-    [ownerId, activeSection, userSettings.defaultColor, reloadNotes]
+    [ownerId, activeSection, userSettings.defaultColor, userSettings.expand_notes_by_default, reloadNotes]
   );
 
   const closeEditor = useCallback(() => {
@@ -824,7 +826,7 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         isEditorExpanded,
         setEditingNote: (note) => {
           setEditingNote(note);
-          setIsEditorExpanded(false);
+          setIsEditorExpanded(!!note && userSettings.expand_notes_by_default);
           setIsEditorOpen(!!note);
         },
         isEditorOpen,

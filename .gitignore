@@ -5,6 +5,7 @@ frontend/dist/
 backend/dist/
 backend/data/
 coverage/
+*.zip
 .DS_Store
 *.log
 .env*

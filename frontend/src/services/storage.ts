@@ -270,7 +270,7 @@ class StorageService {
     try {
       const raw = localStorage.getItem(`${SETTINGS_KEY}_${userId}`);
       if (!raw) {
-        return { defaultColor: 'default', theme: 'light', floating_add_button_enabled: true, view_mode: 'grid' };
+        return { defaultColor: 'default', theme: 'light', floating_add_button_enabled: true, view_mode: 'grid', expand_notes_by_default: false };
       }
       const parsed = JSON.parse(raw);
       return {
@@ -278,9 +278,10 @@ class StorageService {
         theme: parsed.theme || 'light',
         floating_add_button_enabled: parsed.floating_add_button_enabled !== false,
         view_mode: parsed.view_mode === 'list' ? 'list' : 'grid',
+        expand_notes_by_default: parsed.expand_notes_by_default === true,
       };
     } catch {
-      return { defaultColor: 'default', theme: 'light', floating_add_button_enabled: true, view_mode: 'grid' };
+      return { defaultColor: 'default', theme: 'light', floating_add_button_enabled: true, view_mode: 'grid', expand_notes_by_default: false };
     }
   }
 

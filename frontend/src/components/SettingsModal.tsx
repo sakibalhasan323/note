@@ -3,7 +3,7 @@ import { useNotes } from '../context/NotesContext';
 import { useAuth } from '../context/AuthContext';
 import { NoteColor, ThemePreference } from '../types';
 import { ColorPicker } from './ColorPicker';
-import { X, Sun, Moon, Laptop, LogOut, User, Palette, PlusCircle } from 'lucide-react';
+import { X, Sun, Moon, Laptop, LogOut, User, Palette, PlusCircle, Maximize2 } from 'lucide-react';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -28,6 +28,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
   const handleToggleFloatingButton = (active: boolean) => {
     updateUserSettings({ floating_add_button_enabled: active });
+  };
+
+  const handleToggleExpandByDefault = (active: boolean) => {
+    updateUserSettings({ expand_notes_by_default: active });
   };
 
   return (
@@ -141,6 +145,46 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 onClick={() => handleToggleFloatingButton(false)}
                 className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors ${
                   !userSettings.floating_add_button_enabled
+                    ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-xs'
+                    : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                }`}
+              >
+                Inactive
+              </button>
+            </div>
+          </div>
+
+          {/* Open notes in Expanded view by default */}
+          <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+            <div>
+              <div className="flex items-center gap-1.5">
+                <Maximize2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                  Open notes expanded
+                </p>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Always open notes in expanded view
+              </p>
+            </div>
+
+            <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 p-0.5 bg-slate-100 dark:bg-slate-800">
+              <button
+                type="button"
+                onClick={() => handleToggleExpandByDefault(true)}
+                className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors ${
+                  userSettings.expand_notes_by_default
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                }`}
+              >
+                Active
+              </button>
+              <button
+                type="button"
+                onClick={() => handleToggleExpandByDefault(false)}
+                className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors ${
+                  !userSettings.expand_notes_by_default
                     ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-xs'
                     : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                 }`}

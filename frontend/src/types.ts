@@ -108,6 +108,7 @@ export interface UserSettings {
   theme: ThemePreference;
   floating_add_button_enabled: boolean;
   view_mode: 'grid' | 'list';
+  expand_notes_by_default: boolean;
 }
 
 export interface FirebaseConfig {
